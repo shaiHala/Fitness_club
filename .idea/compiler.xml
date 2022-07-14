@@ -2,24 +2,28 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="api-gateway" />
         <module name="sport-service" />
-        <module name="member-service" />
         <module name="subscription-service" />
         <module name="discovery-server" />
         <module name="administration-service" />
+        <module name="api-gateway" />
+        <module name="member-service" />
+        <module name="keycloak-server" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Fitness_club" options="" />
       <module name="administration-service" options="-parameters" />
       <module name="api-gateway" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
+      <module name="keycloak-server" options="-parameters" />
       <module name="member-service" options="-parameters" />
       <module name="sport-service" options="-parameters" />
       <module name="subscription-service" options="-parameters" />

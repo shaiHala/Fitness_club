@@ -40,11 +40,6 @@ public class ClientController {
 //		return user;
 //	}
 
-	@GetMapping("/auth")
-	public String getAdminKeycloak() {
-		Keycloak key= keyloack.getAdminKeycloak();
-		return "hELLO";
-	}
 
 
 	@PostMapping(path = "/signin")

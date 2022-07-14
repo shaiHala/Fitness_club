@@ -19,62 +19,57 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.util.TokenUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import univ.master.mql.memberservice.dto.ClientRequest;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@RequestMapping("/users")
-@RestController
+//@RequestMapping("/users")
+//@RestController
+@Service
 public class KeycloackService {
 
     private String authServerUrl = "http://localhost:8081/";
     private String realm = "fitness-club";
     private String clientId = "fitness-club-service";
     private String role = "member";
-    private String clientSecret = "vAujqG1Adpr8AFQpBiYSraZ1OQvtFzj2";
+    private String clientSecret = "SFEeC54NsdMCEK7SEHYJEIUAabHMmi8t";
     private final Map<String, List<String>> roleMapping = new HashMap<>();
-
-    public Keycloak getAdminKeycloak() {
-
-        Keycloak keycloak = KeycloakBuilder.builder().serverUrl("http://localhost:8081/")
-                .grantType(OAuth2Constants.PASSWORD).realm("master").clientId("admin-cli")
-                .username("admin").password("admin")
-//                .resteasyClient(new ResteasyClientBuilder().connectionPoolSize(10).build())
-                .build();
-        keycloak.tokenManager().getAccessToken();
-        AccessTokenResponse accessToken = keycloak.tokenManager().getAccessToken();
-
-        return keycloak;
-    }
-
 
 
     public UserRepresentation create(ClientRequest appUser) {
-System.err.println("offffffffffffff");
+
         List<String> list=new ArrayList<>();
         list.add(role);
         if (appUser instanceof ClientRequest) {
             this.roleMapping.put(this.clientId, list);
         }
-
+//
         Keycloak keycloak = KeycloakBuilder.builder().serverUrl(authServerUrl)
                 .grantType(OAuth2Constants.PASSWORD).realm("master").clientId("admin-cli")
                 .username("admin").password("admin")
                 .resteasyClient(new ResteasyClientBuilder().connectionPoolSize(10).build()).build();
-        keycloak.tokenManager().getAccessToken();
+//
+//        Keycloak keycloak = Keycloak.getInstance("http://localhost:8081/", "master",
+//                "admin", "admin", "admin-cli");
 
+  try{      keycloak.tokenManager().getAccessToken();}catch (Exception e){
+      System.out.println(e.getMessage());
+  }
+
+        keycloak.tokenManager().getAccessToken();
         CredentialRepresentation cr = new CredentialRepresentation();
         cr.setType(OAuth2Constants.PASSWORD);
         cr.setValue(appUser.getPassword());
 
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setUsername(appUser.getUsername());
-        userRepresentation.setFirstName(appUser.getFName());
-        userRepresentation.setLastName(appUser.getLName());
-        userRepresentation.setEmail(appUser.getEmail());
-System.err.println(cr);
+//        userRepresentation.setFirstName(appUser.getFName());
+//        userRepresentation.setLastName(appUser.getLName());
+//        userRepresentation.setEmail(appUser.getEmail());
+//System.err.println(cr);
         userRepresentation.setClientRoles(roleMapping);
         userRepresentation.setCredentials(Collections.singletonList(cr));
         userRepresentation.setEnabled(true);
@@ -168,6 +163,7 @@ System.err.println(cr);
     @PostMapping(path = "/sup")
     public String deleteKeycloakUser(@RequestBody ClientRequest student) {
         Keycloak keycloak = getAdminKeycloak();
+        keycloak.tokenManager().getAccessToken();
         List<UserRepresentation> userList = keycloak.realm(realm).users().search(student.getUsername());
         for (UserRepresentation user : userList) {
             if (user.getUsername().equals(student.getUsername())) {
@@ -177,7 +173,15 @@ System.err.println(cr);
         return "hello";
     }
 
+    private Keycloak getAdminKeycloak() {
+        Keycloak keycloak = Keycloak.getInstance("http://localhost:8081/", "master",
+               "admin", "admin", "admin-cli");
 
+        try{      keycloak.tokenManager().getAccessToken();}catch (Exception e){
+            System.out.println(e.getMessage());
+        }
+        return  keycloak;
+    }
 
 
     @PreAuthorize("hasRole('user')")
@@ -185,6 +189,8 @@ System.err.println(cr);
     public  String  isClient(){
         return "hello users";
     }
+
+
     @PreAuthorize("hasRole('member')"+"&&"+"hasRole('user')")
     @GetMapping(path = "/forClient")
     public  String  isUser(){
