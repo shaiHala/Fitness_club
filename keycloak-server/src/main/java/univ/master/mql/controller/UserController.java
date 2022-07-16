@@ -10,25 +10,14 @@ import org.keycloak.representations.idm.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import univ.master.mql.DTO.UserDTO;
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.keycloak.OAuth2Constants;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.admin.client.resource.ClientResource;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.authorization.client.AuthzClient;
-import org.keycloak.authorization.client.Configuration;
-import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import univ.master.mql.Service.UserService;
+import univ.master.mql.services.UserService;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-@RequestMapping("/users")
+@RequestMapping("/api/keycloak/users")
 @RestController
 public class UserController {
 
@@ -44,12 +33,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @GetMapping("/test")
+    public String test(){
+        return userService.test();
+    }
+
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Add user", description = "Add new user informations")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "successful operation",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserDTO.class)))) })
-
     @PostMapping(value = "/create")
     public UserRepresentation create(@RequestBody UserDTO appUser) {
         return  userService.create(appUser);

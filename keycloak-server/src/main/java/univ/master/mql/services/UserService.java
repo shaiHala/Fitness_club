@@ -1,4 +1,4 @@
-package univ.master.mql.Service;
+package univ.master.mql.services;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.OAuth2Constants;
@@ -14,17 +14,14 @@ import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import univ.master.mql.DTO.UserDTO;
+import univ.master.mql.feign.UserProxy;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
 @Service
 public class UserService {
 
@@ -36,6 +33,15 @@ public class UserService {
     private String clientSecret = "lsmFBHqM2GrHkr9CBASVlxVXYPcif4PJ";
     private final Map<String, List<String>> roleMapping = new HashMap<>();
 
+    private UserProxy proxy;
+
+    public UserService(UserProxy proxy) {
+        this.proxy = proxy;
+    }
+
+    public String test(){
+        return proxy.tst();
+    }
     public UserRepresentation create(UserDTO appUser) {
 
         List<String> list=new ArrayList<>();
@@ -57,10 +63,10 @@ public class UserService {
         Map<String, List<String> > otherAttribute = new HashMap<String, List<String>>();
         otherAttribute.put("phoneNumber", Collections.singletonList(appUser.getPhone()));
         otherAttribute.put("gender",Collections.singletonList(appUser.getGender()));
-        otherAttribute.put("birthdate",Collections.singletonList(appUser.getDateOfBirth()));
+        otherAttribute.put("birthdate",Collections.singletonList(appUser.getBirthdate()));
         otherAttribute.put("cin",Collections.singletonList(appUser.getCin()));
         otherAttribute.put("address",Collections.singletonList(appUser.getAddress()));
-
+ System.err.println(otherAttribute);
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setUsername(appUser.getUsername());
         userRepresentation.setEmail(appUser.getEmail());
@@ -70,9 +76,13 @@ public class UserService {
         userRepresentation.setClientRoles(roleMapping);
         userRepresentation.setCredentials(Collections.singletonList(cr));
         userRepresentation.setEnabled(true);
-
-        userRepresentation.getRequiredActions().add("UPDATE_PROFILE");
-        userRepresentation.getRequiredActions().add("UPDATE_PASSWORD");
+        System.err.println(userRepresentation.getAttributes().get("cin"));
+//        userRepresentation.getRequiredActions().add("UPDATE_PROFILE");
+//        userRepresentation.getRequiredActions().add("UPDATE_PASSWORD");
+        List <String > action=new ArrayList<>();
+        action.add("UPDATE_PROFILE");
+        action.add("UPDATE_PASSWORD");
+        userRepresentation.setRequiredActions(action);
         keycloak.realm(realm).users().create(userRepresentation);
 
         List<UserRepresentation> userList = keycloak.realm(realm).users().search(appUser.getUsername()).stream()
@@ -82,6 +92,8 @@ public class UserService {
         System.err.println("User with id: " + userRepresentation.getId() + " created");
 
         this.assignRoleToUser(userRepresentation.getId(), list.get(0));
+        appUser.setId(userRepresentation.getId());
+        proxy.add(appUser);
 
         return  userRepresentation;
     }
@@ -96,6 +108,8 @@ public class UserService {
         Configuration configuration =
                 new Configuration(authServerUrl, realm, clientId, clientCredentials, null);
         AuthzClient authzClient = AuthzClient.create(configuration);
+
+
 
         AccessTokenResponse response =
                 authzClient.obtainAccessToken(userDTO.getEmail(), userDTO.getPassword());
@@ -219,9 +233,9 @@ public class UserService {
                 if(userDTO.getUsername()!="") usr.setUsername(userDTO.getUsername());
                 if(userDTO.getPhone()!=null) usr.getAttributes().get("phone").set(0,userDTO.getPhone());
                 if(userDTO.getGender()!=null) usr.getAttributes().get("gender").set(0,userDTO.getGender());
-                if(userDTO.getDateOfBirth()!=null) usr.getAttributes().get("birthdate").set(0,userDTO.getDateOfBirth());
-                if(userDTO.getCin()!=null)  usr.getAttributes().get("cin").set(0,userDTO.getCin());
-                if(userDTO.getAddress()!=null) usr.getAttributes().get("address").set(0,userDTO.getAddress());
+                if(userDTO.getBirthdate()!="") usr.getAttributes().get("birthdate").set(0,userDTO.getBirthdate());
+                if(userDTO.getCin()!="")  usr.getAttributes().get("cin").set(0,userDTO.getCin());
+                if(userDTO.getAddress()!="") usr.getAttributes().get("address").set(0,userDTO.getAddress());
 
                 UserResource userResource = usersResource.get(usr.getId());
 

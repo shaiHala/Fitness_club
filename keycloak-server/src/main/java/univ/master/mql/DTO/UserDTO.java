@@ -17,7 +17,7 @@ public class UserDTO {
     private String phone;
     private int statusCode;
     private String status;
-    private String dateOfBirth;
+    private String birthdate;
     private String gender;
     private String cin;
     private String address;
